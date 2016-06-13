@@ -12,16 +12,22 @@ class SaveAWSPriceList
 
     offerCode = offer_index_json["offerCode"]
     version = offer_index_json["version"]
-    skus = offer_index_json["products"].keys
-    skus.each do |sku|
+    skus = offer_index_json["products"]
+    save_skus(skus, offerCode, version)
+  end
+
+  def save_skus(skus, offerCode, version)
+    skus.each_key do |sku|
       sku_doc = {
-          "sku" => sku,
+          "_id": "#{version}:#{sku}",
+          "offerCode" => offerCode,
           "version" => version,
-          "offerCode" => offerCode
+          "sku" => sku,
+          "productFamily" => skus[sku]["productFamily"],
+          "attributes" => skus[sku]["attributes"]
       }
       @client[:skus].insert_one(sku_doc)
     end
-
   end
 
 end

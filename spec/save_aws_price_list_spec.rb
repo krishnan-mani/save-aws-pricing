@@ -11,17 +11,25 @@ RSpec.describe "save AWS price list" do
     Mongo::Client.new(db_url).database.drop
   end
 
-  it "saves offer code, sku, term type, offer term code, rate code by version for the service as specified in the offer-index file" do
-
+  it "saves offer code, sku by version for the service as specified in the offer-index file" do
     offer_index_filename = File.join(File.dirname(__FILE__), 'resources', 'AmazonRoute53_offer-index.json')
     offer_index_json = JSON.parse(File.read(offer_index_filename))
     _offer_code = offer_index_json["offerCode"]
     _version = offer_index_json["version"]
 
+    first_sku_id = offer_index_json["products"].keys.first
+    first_sku = offer_index_json["products"][first_sku_id]
+    sku_count = offer_index_json["products"].keys.count
+
     SaveAWSPriceList.new(db_url).save(offer_index_filename)
 
     db_client = Mongo::Client.new(db_url)
-    expect(db_client[:skus].find(:version => _version).count).to be > 0
+    expect((db_client)[:skus].count(:version => _version, :offerCode => _offer_code)).to be sku_count
+
+    found_sku = db_client[:skus].find(:version => _version, :sku => first_sku_id).limit(1).first
+    expect(found_sku["offerCode"]).to eq(_offer_code)
+    expect(found_sku["productFamily"]).to eq(first_sku["productFamily"])
+    expect(found_sku["attributes"]).to eq(first_sku["attributes"])
   end
 
 end

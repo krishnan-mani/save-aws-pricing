@@ -34,10 +34,13 @@ RSpec.describe "save AWS price list from offer-index file" do
 
   it "saves offer code, and terms by version for the service" do
     terms = offer_index_json["terms"].keys
+    some_term = terms.first
     SaveAWSPriceList.new(db_url).save(offer_index_filename)
 
     db_client = Mongo::Client.new(db_url)
     expect(db_client[:terms].count(:version => _version, :offerCode => _offer_code)).to be terms.count
+    found_term = db_client[:terms].find(:version => _version, :offerCode => _offer_code, :term => some_term).limit(1).first["term"]
+    expect(found_term).to eq some_term
   end
 
 end

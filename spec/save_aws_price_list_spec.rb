@@ -1,6 +1,8 @@
 require 'json'
 require 'mongo'
 
+Mongo::Logger.logger.level = Logger::WARN
+
 require_relative '../lib/save_aws_price_list'
 
 RSpec.describe "save AWS price list from offer-index file" do
@@ -16,7 +18,6 @@ RSpec.describe "save AWS price list from offer-index file" do
   end
 
   it "saves skus by offer code and version" do
-
     first_sku_id = offer_index_json["products"].keys.first
     first_sku = offer_index_json["products"][first_sku_id]
     sku_count = offer_index_json["products"].keys.count

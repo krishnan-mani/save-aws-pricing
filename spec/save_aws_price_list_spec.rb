@@ -15,7 +15,7 @@ RSpec.describe "save AWS price list from offer-index file" do
     Mongo::Client.new(db_url).database.drop
   end
 
-  it "saves offer code, and skus by version for the service" do
+  it "saves skus by offer code and version" do
 
     first_sku_id = offer_index_json["products"].keys.first
     first_sku = offer_index_json["products"][first_sku_id]
@@ -32,7 +32,7 @@ RSpec.describe "save AWS price list from offer-index file" do
     expect(found_sku["attributes"]).to eq(first_sku["attributes"])
   end
 
-  it "saves offer code, and terms by version for the service" do
+  it "saves terms by offer code and version" do
     terms = offer_index_json["terms"].keys
     some_term = terms.first
     SaveAWSPriceList.new(db_url).save(offer_index_filename)
@@ -43,7 +43,7 @@ RSpec.describe "save AWS price list from offer-index file" do
     expect(found_term).to eq some_term
   end
 
-  it "saves offer code, and offer term codes for sku by version for the service" do
+  it "saves offer term codes for sku by offer code and version" do
     terms = offer_index_json["terms"]
     offer_term_codes_by_sku = []
     terms.each_key do |term|
@@ -60,6 +60,31 @@ RSpec.describe "save AWS price list from offer-index file" do
     some_otc_by_sku = offer_term_codes_by_sku.first.values.first
     found_otc_by_sku = db_client[:offer_term_codes_by_sku].find(:version => _version, :offerCode => _offer_code, :sku => some_otc_by_sku["sku"], :offerTermCode => some_otc_by_sku["offerTermCode"]).limit(1).first
     expect(found_otc_by_sku["effectiveDate"]).to eq(some_otc_by_sku["effectiveDate"])
+  end
+
+  it "saves rate codes by offer code and version" do
+    terms = offer_index_json["terms"]
+    offer_term_codes_by_sku = []
+    terms.each_key do |term|
+      terms[term].each_key do |sku|
+        offer_term_codes_by_sku << terms[term][sku]
+      end
+    end
+
+    price_dimensions = []
+    offer_term_codes_by_sku.collect do |el|
+      price_dimensions << el.values.first["priceDimensions"]
+    end
+
+    rate_codes = price_dimensions.collect do |pd|
+      pd.values
+    end
+    rate_codes.flatten!
+
+    SaveAWSPriceList.new(db_url).save(offer_index_filename)
+
+    db_client = Mongo::Client.new(db_url)
+    expect(db_client[:rate_codes].count(:version => _version, :offerCode => _offer_code)).to eq rate_codes.count
   end
 
 end

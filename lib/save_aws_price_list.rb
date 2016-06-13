@@ -21,7 +21,7 @@ class SaveAWSPriceList
     save_offer_term_codes_by_sku(terms, offerCode, version)
   end
 
-  def save_offer_term_codes_by_sku(terms, offerCode, version)
+  def save_offer_term_codes_by_sku(terms, offer_code, version)
     offer_term_codes_by_sku = []
     terms.each_key do |term|
       terms[term].each_key do |sku|
@@ -35,15 +35,31 @@ class SaveAWSPriceList
       otc = otc_data["offerTermCode"]
 
       offer_term_code_doc = {
-          "_id" => "#{version}:#{offerCode}:#{sku}:#{otc}",
+          "_id" => "#{version}:#{offer_code}:#{sku}:#{otc}",
           "version" => version,
-          "offerCode" => offerCode,
+          "offerCode" => offer_code,
           "sku" => sku,
           "offerTermCode" => otc,
           "effectiveDate" => otc_data["effectiveDate"]
       }
 
+      save_rate_codes(otc_data["priceDimensions"], offer_code, sku, otc, version)
+
       @client[:offer_term_codes_by_sku].insert_one(offer_term_code_doc)
+    end
+  end
+
+  def save_rate_codes(price_dimensions, offer_code, sku, otc, version)
+    price_dimensions.each_key do |rate_code|
+      rate_code_doc = {
+          "_id" => "#{version}:#{offer_code}:#{rate_code}",
+          "offerCode" => offer_code,
+          "version" => version,
+          "sku" => sku,
+          "offerTermCode" => otc
+      }
+      rate_code_doc.merge!(price_dimensions[rate_code])
+      @client[:rate_codes].insert_one(rate_code_doc)
     end
   end
 

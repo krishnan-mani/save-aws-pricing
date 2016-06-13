@@ -56,6 +56,10 @@ RSpec.describe "save AWS price list from offer-index file" do
 
     db_client = Mongo::Client.new(db_url)
     expect(db_client[:offer_term_codes_by_sku].count(:version => _version, :offerCode => _offer_code)).to be offer_term_codes_by_sku.count
+
+    some_otc_by_sku = offer_term_codes_by_sku.first.values.first
+    found_otc_by_sku = db_client[:offer_term_codes_by_sku].find(:version => _version, :offerCode => _offer_code, :sku => some_otc_by_sku["sku"], :offerTermCode => some_otc_by_sku["offerTermCode"]).limit(1).first
+    expect(found_otc_by_sku["effectiveDate"]).to eq(some_otc_by_sku["effectiveDate"])
   end
 
 end

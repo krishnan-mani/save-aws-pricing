@@ -39,7 +39,8 @@ class SaveAWSPriceList
           "version" => version,
           "offerCode" => offerCode,
           "sku" => sku,
-          "offerTermCode" => otc
+          "offerTermCode" => otc,
+          "effectiveDate" => otc_data["effectiveDate"]
       }
 
       @client[:offer_term_codes_by_sku].insert_one(offer_term_code_doc)

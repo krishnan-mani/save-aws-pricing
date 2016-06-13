@@ -14,6 +14,21 @@ class SaveAWSPriceList
     version = offer_index_json["version"]
     skus = offer_index_json["products"]
     save_skus(skus, offerCode, version)
+
+    terms = offer_index_json["terms"]
+    save_terms(terms, offerCode, version)
+  end
+
+  def save_terms(terms, offerCode, version)
+    terms.each_key do |term|
+      term_doc = {
+          "_id" => "#{version}:#{offerCode}#{term}",
+          "offerCode" => offerCode,
+          "version" => version,
+          "term": term
+      }
+      @client[:terms].insert_one(term_doc)
+    end
   end
 
   def save_skus(skus, offerCode, version)

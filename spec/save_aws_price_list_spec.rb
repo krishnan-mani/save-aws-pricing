@@ -15,7 +15,7 @@ RSpec.describe "save AWS price list from offer-index file" do
     Mongo::Client.new(db_url).database.drop
   end
 
-  it "saves offer code, sku by version for the service" do
+  it "saves offer code, and skus by version for the service" do
 
     first_sku_id = offer_index_json["products"].keys.first
     first_sku = offer_index_json["products"][first_sku_id]
@@ -41,6 +41,21 @@ RSpec.describe "save AWS price list from offer-index file" do
     expect(db_client[:terms].count(:version => _version, :offerCode => _offer_code)).to be terms.count
     found_term = db_client[:terms].find(:version => _version, :offerCode => _offer_code, :term => some_term).limit(1).first["term"]
     expect(found_term).to eq some_term
+  end
+
+  it "saves offer code, and offer term codes for sku by version for the service" do
+    terms = offer_index_json["terms"]
+    offer_term_codes_by_sku = []
+    terms.each_key do |term|
+      terms[term].each_key do |sku|
+        offer_term_codes_by_sku << terms[term][sku]
+      end
+    end
+
+    SaveAWSPriceList.new(db_url).save(offer_index_filename)
+
+    db_client = Mongo::Client.new(db_url)
+    expect(db_client[:offer_term_codes_by_sku].count(:version => _version, :offerCode => _offer_code)).to be offer_term_codes_by_sku.count
   end
 
 end

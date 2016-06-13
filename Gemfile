@@ -5,4 +5,5 @@ gem 'mongo'
 
 group :test do
   gem 'rspec'
+  gem 'byebug'
 end
